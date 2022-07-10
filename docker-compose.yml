@@ -1,0 +1,54 @@
+services:
+  mysql:
+    container_name: mysql
+    platform: linux/amd64
+    image: mysql:8
+    restart: always
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./.docker/mysql/data:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: secret123#!
+      MYSQL_DATABASE: docker
+      MYSQL_USER: docker
+      MYSQL_PASSWORD: secret
+    networks:
+      - main-network
+  php:
+    container_name: php_serve
+    build: ".docker/php/"
+    working_dir: /usr/src/app
+    depends_on:
+      - mysql
+    volumes:
+      - ./backend/:/usr/src/app
+    command: "php artisan serve --host=0.0.0.0 --port=8000"
+    ports:
+      - "8000:8000"
+    networks:
+      - main-network
+  node:
+    container_name: node_serve
+    build: ".docker/node/"
+    working_dir: /home/node/app
+    depends_on:
+      - php
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./frontend/:/home/node/app
+    ports:
+      - "8080:8080"
+    command: "npm run serve"
+    networks:
+      - main-network
+  mailhog:
+    container_name: mailhog
+    image: mailhog/mailhog
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+networks:
+  main-network:
+    driver: bridge

@@ -1,0 +1,5 @@
+backend
+frontend
+.docker/mysql/data
+.idea
+.DS_Store
